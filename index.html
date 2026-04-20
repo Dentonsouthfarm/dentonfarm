@@ -739,6 +739,33 @@ input:checked + .toggle-slider::before { transform: translateX(20px); }
       <button class="btn btn-secondary" onclick="openManualExpense()">✏️ Manual Entry</button>
     </div>
 
+    <!-- Mileage quick-entry card -->
+    <div class="card" style="border-left:4px solid var(--green-bright);margin-bottom:14px">
+      <div class="card-title" style="margin-bottom:10px">🚗 Log Mileage</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Date</label>
+          <input type="date" class="form-input" id="quickMileDate">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Miles Driven</label>
+          <input type="number" class="form-input" id="quickMiles" placeholder="0.0" step="0.1" min="0" oninput="updateQuickMileCalc()">
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:10px">
+        <label class="form-label">Purpose / Destination</label>
+        <input type="text" class="form-input" id="quickMileDesc" placeholder="e.g. Feed store run, Vet visit">
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;background:var(--green-mist);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:10px">
+        <div>
+          <div style="font-size:11px;color:var(--text-muted)">Rate: <span id="quickMileRateDisplay">$0.67</span>/mile</div>
+          <div style="font-size:18px;font-weight:600;color:var(--green-dark)" id="quickMileTotal">$0.00</div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);text-align:right">IRS Standard<br>Mileage Rate</div>
+      </div>
+      <button class="btn btn-primary" onclick="saveQuickMileage()">Save Mileage</button>
+    </div>
+
     <div class="card">
       <div class="card-title">All Expenses</div>
       <div id="expenseList"></div>
@@ -842,6 +869,31 @@ input:checked + .toggle-slider::before { transform: translateX(20px); }
           <div class="settings-desc">Store receipt images in Drive</div>
         </div>
         <div class="settings-arrow">›</div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-title">Mileage</div>
+      <div class="card" style="margin-bottom:0;border-radius:var(--radius)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div>
+            <div style="font-size:15px;font-weight:500">IRS Mileage Rate</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Used to calculate deductible mileage cost</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:4px">
+            <span style="font-size:15px;color:var(--text-muted)">$</span>
+            <input type="number" class="form-input" id="mileageRateInput" step="0.001" min="0.1" max="2"
+              style="width:72px;padding:8px 10px;font-size:15px;font-weight:600;text-align:center"
+              onchange="saveMileageRate(this.value)">
+            <span style="font-size:13px;color:var(--text-muted)">/mi</span>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);background:var(--green-mist);border-radius:var(--radius-sm);padding:8px 10px">
+          💡 IRS rates: 2024 = $0.67/mi · 2023 = $0.655/mi · 2022 = $0.625/mi (H2) · Update each January when IRS announces the new rate.
+        </div>
+        <div style="margin-top:10px;font-size:13px;color:var(--text-muted)">
+          YTD mileage: <strong id="ytdMilesSetting">0 miles</strong> = <strong id="ytdMileValueSetting">$0.00</strong>
+        </div>
       </div>
     </div>
 
@@ -1042,8 +1094,11 @@ input:checked + .toggle-slider::before { transform: translateX(20px); }
     </div>
     <div class="form-group">
       <label class="form-label">Mileage (if applicable)</label>
-      <input type="number" class="form-input" id="expMileage" placeholder="Miles driven" step="0.1" min="0">
-      <div class="form-hint">Mileage @ $0.67/mile (IRS rate) will be auto-calculated</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="number" class="form-input" id="expMileage" placeholder="Miles driven" step="0.1" min="0" oninput="updateExpMileCalc()" style="flex:1">
+        <div style="background:var(--green-mist);border-radius:var(--radius-sm);padding:8px 12px;white-space:nowrap;font-size:14px;font-weight:600;color:var(--green-dark);min-width:70px;text-align:center" id="expMileCalc">$0.00</div>
+      </div>
+      <div class="form-hint" id="expMileHint">Rate: $0.67/mile (IRS) — update in Settings</div>
     </div>
     <div class="form-group">
       <label class="form-label">Notes</label>
@@ -1274,6 +1329,7 @@ const DB = {
     sheetsUrl: '',
     scriptUrl: '',
     googleConnected: false,
+    mileageRate: 0.67,
   }
 };
 
@@ -1393,7 +1449,9 @@ function openManualExpense() {
   document.getElementById('expAmount').value = '';
   document.getElementById('expVendor').value = '';
   document.getElementById('expMileage').value = '';
-  document.getElementById('expNotes').value = '';
+  document.getElementById('expMileCalc').textContent = '$0.00';
+  const rate = getMileageRate();
+  document.getElementById('expMileHint').textContent = `Rate: $${rate.toFixed(3)}/mile (IRS) — update in Settings`;
   buildCategoryGrid();
   openModal('expenseModal');
 }
@@ -1416,12 +1474,13 @@ function selectExpCat(id) {
 function saveManualExpense() {
   const amount_raw = parseFloat(document.getElementById('expAmount').value) || 0;
   const mileage = parseFloat(document.getElementById('expMileage').value) || 0;
+  const rate = DB.settings.mileageRate || 0.67;
   let amount = amount_raw;
   let desc = document.getElementById('expDesc').value.trim();
 
   if (mileage > 0 && selectedExpCategory === 'mileage') {
-    amount = parseFloat((mileage * 0.67).toFixed(2));
-    if (!desc) desc = `${mileage} miles @ $0.67/mi`;
+    amount = parseFloat((mileage * rate).toFixed(2));
+    if (!desc) desc = `${mileage} miles @ $${rate}/mi`;
   }
 
   if (amount <= 0 && mileage <= 0) { showToast('Enter an amount or mileage'); return; }
@@ -1435,6 +1494,7 @@ function saveManualExpense() {
     amount: amount,
     vendor: document.getElementById('expVendor').value.trim(),
     mileage: mileage || null,
+    mileageRate: mileage > 0 ? rate : null,
     notes: document.getElementById('expNotes').value.trim(),
     source: 'manual'
   };
@@ -2128,9 +2188,21 @@ document.addEventListener('click', e => {
 function refreshSettings() {
   document.getElementById('catCountDesc').textContent = DB.expenseCategories.length + ' categories';
   document.getElementById('itemCountDesc').textContent = DB.saleItems.length + ' items';
-
   document.getElementById('vendorCountDesc').textContent = DB.vendors.length + ' vendors saved';
-  if (DB.settings.googleConnected) {
+
+  // Mileage rate field
+  const rate = DB.settings.mileageRate || 0.67;
+  document.getElementById('mileageRateInput').value = rate.toFixed(3);
+
+  // YTD mileage stats
+  const year = new Date().getFullYear();
+  const ytdMileExp = DB.expenses.filter(e => e.mileage && new Date(e.date).getFullYear() === year);
+  const ytdMiles = ytdMileExp.reduce((a, e) => a + (e.mileage || 0), 0);
+  const ytdValue = ytdMileExp.reduce((a, e) => a + (e.mileage || 0) * (e.mileageRate || rate), 0);
+  document.getElementById('ytdMilesSetting').textContent = ytdMiles.toFixed(1) + ' miles';
+  document.getElementById('ytdMileValueSetting').textContent = '$' + ytdValue.toFixed(2);
+
+  const gs = document.getElementById('googleStatus');
     gs.innerHTML = '<div class="status-bar">✅ Connected to Google Sheets</div>';
   } else {
     gs.innerHTML = '<div class="status-bar error">Not connected — tap Google Sheets Sync to set up</div>';
@@ -2264,24 +2336,135 @@ async function autoSync(record, type) {
 }
 
 // ══════════════════════════════════════════════
+//  MILEAGE HELPERS
+// ══════════════════════════════════════════════
+function getMileageRate() {
+  return parseFloat(DB.settings.mileageRate) || 0.67;
+}
+
+function saveMileageRate(val) {
+  const r = parseFloat(val);
+  if (!r || r < 0.1 || r > 2) { showToast('Enter a valid rate (e.g. 0.67)'); return; }
+  DB.settings.mileageRate = parseFloat(r.toFixed(3));
+  saveDB();
+  refreshSettings();
+  showToast('Mileage rate updated to $' + DB.settings.mileageRate + '/mile');
+}
+
+// Quick mileage card on expense screen
+function updateQuickMileCalc() {
+  const miles = parseFloat(document.getElementById('quickMiles').value) || 0;
+  const rate = getMileageRate();
+  document.getElementById('quickMileTotal').textContent = '$' + (miles * rate).toFixed(2);
+  document.getElementById('quickMileRateDisplay').textContent = '$' + rate.toFixed(3);
+}
+
+function saveQuickMileage() {
+  const miles = parseFloat(document.getElementById('quickMiles').value) || 0;
+  const desc = document.getElementById('quickMileDesc').value.trim();
+  const date = document.getElementById('quickMileDate').value || todayStr();
+  if (miles <= 0) { showToast('Enter miles driven'); return; }
+  const rate = getMileageRate();
+  const amount = parseFloat((miles * rate).toFixed(2));
+  const exp = {
+    id: Date.now(),
+    date,
+    category: 'mileage',
+    description: desc || `${miles} miles driven`,
+    amount,
+    vendor: '',
+    mileage: miles,
+    mileageRate: rate,
+    notes: '',
+    source: 'manual'
+  };
+  DB.expenses.unshift(exp);
+  saveDB();
+  document.getElementById('quickMiles').value = '';
+  document.getElementById('quickMileDesc').value = '';
+  document.getElementById('quickMileTotal').textContent = '$0.00';
+  refreshExpenseList();
+  refreshDashboard();
+  showToast(`${miles} miles saved — $${amount.toFixed(2)}`);
+  autoSync(exp, 'expense');
+}
+
+// Live calc in manual expense modal
+function updateExpMileCalc() {
+  const miles = parseFloat(document.getElementById('expMileage').value) || 0;
+  const rate = getMileageRate();
+  document.getElementById('expMileCalc').textContent = '$' + (miles * rate).toFixed(2);
+  document.getElementById('expMileHint').textContent = `Rate: $${rate.toFixed(3)}/mile (IRS) — update in Settings`;
+}
+
+// ══════════════════════════════════════════════
 //  EXPORT CSV
 // ══════════════════════════════════════════════
 function exportToCSV() {
-  let csv = 'Type,Date,Category/Item,Description/Buyer,Amount,Vendor/Payment,Notes\n';
+  const rate = DB.settings.mileageRate || 0.67;
+
+  // ── EXPENSES SHEET ──
+  let csv = 'EXPENSES\n';
+  csv += 'Date,Category,Description,Vendor,Miles,Rate ($/mi),Mileage Amount,Other Amount,Total Amount,Notes\n';
+
+  let totalMiles = 0, totalMileAmt = 0, totalOtherAmt = 0, totalExpAmt = 0;
+
   DB.expenses.forEach(e => {
     const cat = DB.expenseCategories.find(c => c.id === e.category);
-    csv += `Expense,${e.date},"${(cat?.name||'Other')}","${e.description||''}",${e.amount},"${e.vendor||''}","${e.notes||''}"\n`;
+    const miles = e.mileage || '';
+    const mRate = e.mileageRate || (e.mileage ? rate : '');
+    const mileAmt = e.mileage ? (e.mileage * (e.mileageRate || rate)).toFixed(2) : '';
+    const otherAmt = (!e.mileage || e.category !== 'mileage') ? e.amount.toFixed(2) : '';
+    if (e.mileage) { totalMiles += e.mileage; totalMileAmt += parseFloat(mileAmt); }
+    else { totalOtherAmt += e.amount; }
+    totalExpAmt += e.amount;
+    csv += `${e.date},"${cat?.name||'Other'}","${(e.description||'').replace(/"/g,'""')}","${(e.vendor||'').replace(/"/g,'""')}",${miles},${mRate},${mileAmt},${otherAmt},${e.amount.toFixed(2)},"${(e.notes||'').replace(/"/g,'""')}"\n`;
   });
+
+  // Totals row for expenses
+  csv += `TOTALS,,,,"${totalMiles.toFixed(1)}",,"${totalMileAmt.toFixed(2)}","${totalOtherAmt.toFixed(2)}","${totalExpAmt.toFixed(2)}",\n`;
+
+  // ── MILEAGE SUMMARY ──
+  csv += '\nMILEAGE SUMMARY\n';
+  csv += 'Date,Description,Miles,Rate ($/mi),Amount,Notes\n';
+  const mileExpenses = DB.expenses.filter(e => e.mileage && e.mileage > 0);
+  let sumMiles = 0, sumMileAmt = 0;
+  mileExpenses.forEach(e => {
+    const r = e.mileageRate || rate;
+    const amt = (e.mileage * r).toFixed(2);
+    sumMiles += e.mileage;
+    sumMileAmt += parseFloat(amt);
+    csv += `${e.date},"${(e.description||'').replace(/"/g,'""')}",${e.mileage},${r},${amt},"${(e.notes||'').replace(/"/g,'""')}"\n`;
+  });
+  csv += `TOTAL,,${sumMiles.toFixed(1)},,$${sumMileAmt.toFixed(2)},\n`;
+  csv += `IRS Rate Used,,$${rate}/mile,,,\n`;
+
+  // ── SALES SHEET ──
+  csv += '\nSALES\n';
+  csv += 'Date,Buyer,Item,Unit,Qty,Price/Unit,Subtotal,Sale Total,Payment Method,Notes\n';
+  let totalSalesAmt = 0;
   DB.sales.forEach(s => {
     s.items.forEach(item => {
-      csv += `Sale,${s.date},"${item.name}","${s.buyer||''}",${item.subtotal},"${s.payment||''}","${s.notes||''}"\n`;
+      csv += `${s.date},"${(s.buyer||'').replace(/"/g,'""')}","${item.name}","${item.unit}",${item.qty},${item.price.toFixed(2)},${item.subtotal.toFixed(2)},${s.total.toFixed(2)},"${s.payment||''}","${(s.notes||'').replace(/"/g,'""')}"\n`;
     });
+    totalSalesAmt += s.total;
   });
+  csv += `TOTALS,,,,,,"${totalSalesAmt.toFixed(2)}","${totalSalesAmt.toFixed(2)}",,\n`;
+
+  // ── P&L SUMMARY ──
+  csv += '\nP&L SUMMARY\n';
+  csv += `Exported,${new Date().toLocaleDateString()}\n`;
+  csv += `Total Income,$${totalSalesAmt.toFixed(2)}\n`;
+  csv += `Total Expenses,$${totalExpAmt.toFixed(2)}\n`;
+  csv += `Total Miles,${totalMiles.toFixed(1)}\n`;
+  csv += `Mileage Deduction,$${totalMileAmt.toFixed(2)}\n`;
+  csv += `Net Profit/Loss,$${(totalSalesAmt - totalExpAmt).toFixed(2)}\n`;
+
   const blob = new Blob([csv], { type: 'text/csv' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `DentonSouthFarm_${todayStr()}.csv`;
+  a.download = `DentonFarm_${todayStr()}.csv`;
   a.click();
   URL.revokeObjectURL(url);
   showToast('CSV exported!');
@@ -2334,6 +2517,10 @@ function fmtDate(str) {
 // ══════════════════════════════════════════════
 loadDB();
 refreshDashboard();
+
+// Initialize quick mileage card
+document.getElementById('quickMileDate').value = todayStr();
+document.getElementById('quickMileRateDisplay').textContent = '$' + getMileageRate().toFixed(3);
 
 if (DB.settings.googleConnected) {
   document.getElementById('syncDot').classList.add('synced');
