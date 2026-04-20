@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Denton South Farm App - Setup Instructions</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+body { font-family: 'Source Sans 3', sans-serif; max-width: 720px; margin: 0 auto; padding: 24px; background: #faf8f2; color: #1a1a14; line-height: 1.7; }
+h1 { font-family: 'Playfair Display', serif; color: #2D5016; font-size: 28px; margin-bottom: 4px; }
+h2 { font-family: 'Playfair Display', serif; color: #2D5016; font-size: 20px; margin-top: 32px; margin-bottom: 12px; border-bottom: 2px solid #d4eab8; padding-bottom: 6px; }
+h3 { color: #4a7c20; font-size: 16px; margin-top: 20px; margin-bottom: 8px; }
+.subtitle { color: #7a7a60; font-size: 15px; margin-bottom: 28px; }
+.step { background: white; border: 1px solid #d8e8c8; border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; display: flex; gap: 14px; align-items: flex-start; }
+.step-num { background: #2D5016; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px; flex-shrink: 0; margin-top: 2px; }
+.step-body { flex: 1; }
+.step-title { font-weight: 600; font-size: 15px; margin-bottom: 3px; }
+.step-detail { font-size: 14px; color: #3d3d2e; }
+code { background: #f0f7e8; border: 1px solid #d4eab8; border-radius: 4px; padding: 2px 6px; font-family: monospace; font-size: 13px; color: #2D5016; }
+.alert { background: #fef7e4; border: 1px solid #f5c842; border-radius: 10px; padding: 14px 18px; margin: 16px 0; font-size: 14px; }
+.alert-green { background: #f0f7e8; border-color: #7db84a; }
+.tip { background: #f0f7e8; border-left: 3px solid #4a7c20; padding: 10px 14px; font-size: 14px; margin: 8px 0; border-radius: 0 8px 8px 0; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 12px 0; }
+th { background: #2D5016; color: white; padding: 8px 12px; text-align: left; }
+td { padding: 8px 12px; border-bottom: 1px solid #d8e8c8; }
+tr:last-child td { border-bottom: none; }
+.features { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
+.feature { background: white; border: 1px solid #d8e8c8; border-radius: 10px; padding: 12px 14px; font-size: 13px; }
+.feature-icon { font-size: 20px; margin-bottom: 4px; }
+.feature-name { font-weight: 600; color: #2D5016; }
+@media (max-width: 500px) { .features { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<h1>🌾 Denton South Farm App</h1>
+<p class="subtitle">Complete setup and installation guide — no technical experience needed!</p>
+
+<div class="alert alert-green">
+<strong>✅ What you're installing:</strong> A PWA (Progressive Web App) that runs in your phone's Chrome browser and can be saved to your home screen — it works just like a real app, and nothing needs to be "installed" in the traditional sense.
+</div>
+
+<h2>What This App Does</h2>
+
+<div class="features">
+  <div class="feature"><div class="feature-icon">📷</div><div class="feature-name">Receipt Scanning</div>AI reads your receipts and categorizes items automatically</div>
+  <div class="feature"><div class="feature-icon">💰</div><div class="feature-name">Sales Tracking</div>Eggs, goats, poultry, rabbits, and any custom item</div>
+  <div class="feature"><div class="feature-icon">📊</div><div class="feature-name">Reports & P&L</div>Monthly profit/loss charts and category breakdowns</div>
+  <div class="feature"><div class="feature-icon">☁️</div><div class="feature-name">Google Sheets Sync</div>Auto-save everything to a Google spreadsheet</div>
+  <div class="feature"><div class="feature-icon">✏️</div><div class="feature-name">Manual Entry</div>Add expenses and sales without scanning</div>
+  <div class="feature"><div class="feature-icon">🏷️</div><div class="feature-name">Custom Categories</div>Add your own expense categories and sale items</div>
+</div>
+
+<h2>Part 1: Host Your App (One-Time Setup)</h2>
+
+<p>The app needs to be hosted on a website so your phone can open it. The easiest free option is <strong>GitHub Pages</strong>:</p>
+
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-body">
+    <div class="step-title">Create a free GitHub account</div>
+    <div class="step-detail">Go to <code>github.com</code> and sign up for a free account. Use any email address.</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-body">
+    <div class="step-title">Create a new repository</div>
+    <div class="step-detail">Click the green <strong>New</strong> button. Name it <code>dentonfarm</code>. Check <strong>Public</strong>. Click <strong>Create repository</strong>.</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-body">
+    <div class="step-title">Upload your app files</div>
+    <div class="step-detail">Click <strong>uploading an existing file</strong>. Drag and drop all 3 files from the zip you downloaded: <code>index.html</code>, <code>manifest.json</code>, <code>sw.js</code>. Click <strong>Commit changes</strong>.</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-body">
+    <div class="step-title">Enable GitHub Pages</div>
+    <div class="step-detail">Go to your repository → <strong>Settings</strong> → <strong>Pages</strong> (left sidebar) → Under "Source", select <strong>Deploy from a branch</strong> → Choose <strong>main</strong> branch → Click <strong>Save</strong>.</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">5</div>
+  <div class="step-body">
+    <div class="step-title">Get your app URL</div>
+    <div class="step-detail">Wait 2–3 minutes, then refresh the Settings → Pages page. Your URL will be: <code>https://YOUR-USERNAME.github.io/dentonfarm</code>. This is your farm app address!</div>
+  </div>
+</div>
+
+<h2>Part 2: Install on Your Android Phone</h2>
+
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-body">
+    <div class="step-title">Open Chrome on your phone</div>
+    <div class="step-detail">Make sure you're using <strong>Google Chrome</strong> (not Samsung Internet or Firefox). It's the red/yellow/green/blue circle icon.</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-body">
+    <div class="step-title">Go to your app URL</div>
+    <div class="step-detail">Type or paste your URL into Chrome's address bar: <code>https://YOUR-USERNAME.github.io/dentonfarm</code></div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-body">
+    <div class="step-title">Add to Home Screen</div>
+    <div class="step-detail">Tap the <strong>three dots menu (⋮)</strong> in the top right of Chrome → Tap <strong>"Add to Home screen"</strong> → Tap <strong>"Add"</strong>. The app icon will appear on your home screen!</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-body">
+    <div class="step-title">Open the app</div>
+    <div class="step-detail">Tap the <strong>🌾 Denton South Farm</strong> icon on your home screen. It opens fullscreen like a real app — no browser bars!</div>
+  </div>
+</div>
+
+<div class="alert">
+<strong>⚠️ Allow camera access:</strong> The first time you tap "Scan Receipt," Chrome will ask permission to use your camera. Tap <strong>Allow</strong> so the receipt scanner works.
+</div>
+
+<h2>Part 3: Connect Google Sheets (Recommended)</h2>
+
+<h3>Step A: Create Your Spreadsheet</h3>
+
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-body">
+    <div class="step-title">Go to Google Sheets</div>
+    <div class="step-detail">On your phone or computer, go to <code>sheets.google.com</code> and sign in with your Google account.</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-body">
+    <div class="step-title">Create a new spreadsheet</div>
+    <div class="step-detail">Tap the <strong>+</strong> button to create a blank spreadsheet. Rename it <strong>"Denton South Farm"</strong> by clicking the title at top.</div>
+  </div>
+</div>
+
+<h3>Step B: Set Up the Apps Script (for auto-sync)</h3>
+
+<div class="step">
+  <div class="step-num">1</div>
+  <div class="step-body">
+    <div class="step-title">Open Apps Script</div>
+    <div class="step-detail">In your Google Sheet, click <strong>Extensions</strong> → <strong>Apps Script</strong> (do this on a computer, not phone).</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">2</div>
+  <div class="step-body">
+    <div class="step-title">Paste the script</div>
+    <div class="step-detail">Delete everything in the editor. Open the file <code>google-apps-script.js</code> from your download, copy all the text, and paste it into the Apps Script editor.</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">3</div>
+  <div class="step-body">
+    <div class="step-title">Deploy as Web App</div>
+    <div class="step-detail">Click <strong>Deploy</strong> → <strong>New deployment</strong> → Click the gear icon and choose <strong>Web app</strong> → Set "Execute as" to <strong>Me</strong> → Set "Who has access" to <strong>Anyone</strong> → Click <strong>Deploy</strong> → Copy the Web app URL.</div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num">4</div>
+  <div class="step-body">
+    <div class="step-title">Connect in your app</div>
+    <div class="step-detail">In the farm app, tap <strong>Settings</strong> → <strong>Google Sheets Sync</strong> → Paste the Web app URL in the "Apps Script Web App URL" box → Tap <strong>Save & Connect</strong>.</div>
+  </div>
+</div>
+
+<h2>Using the App</h2>
+
+<table>
+  <tr><th>Feature</th><th>How to use</th></tr>
+  <tr><td>📷 Scan Receipt</td><td>Tap "Scan Receipt" on home screen or Expenses tab → Camera or Gallery → AI reads it and lists items → Review, edit, Save</td></tr>
+  <tr><td>✏️ Manual Expense</td><td>Tap "Add Expense" → Choose category → Fill in description and amount → Save</td></tr>
+  <tr><td>🚗 Log Mileage</td><td>Add Expense → select "Mileage" category → enter miles (auto-calculates at $0.67/mile IRS rate)</td></tr>
+  <tr><td>💰 Record Sale</td><td>Tap "Record Sale" → Enter buyer name → Add items (eggs, goats, etc.) with quantity and price → Save</td></tr>
+  <tr><td>📊 Reports</td><td>Tap Reports tab → Switch between This Month / Quarter / Year → See profit/loss chart and category breakdown</td></tr>
+  <tr><td>⬇ Export CSV</td><td>Reports tab → Export CSV button → Downloads spreadsheet file you can email yourself</td></tr>
+  <tr><td>🏷 Add Categories</td><td>Settings → Manage Expense Categories → Type name and emoji → Add</td></tr>
+  <tr><td>🥚 Add Sale Items</td><td>Settings → Manage Sale Items → Type item name and unit → Add</td></tr>
+  <tr><td>☁️ Sync</td><td>Tap "Sync" button at top right anytime to push all data to Google Sheets</td></tr>
+</table>
+
+<h2>Expense Categories (Built-in)</h2>
+<table>
+  <tr><th>Category</th><th>Use for</th></tr>
+  <tr><td>🌾 Feed</td><td>Hay, grain, chicken feed, goat pellets, rabbit pellets</td></tr>
+  <tr><td>🔧 Supplies</td><td>Feeders, waterers, bedding, nesting boxes</td></tr>
+  <tr><td>🚗 Mileage</td><td>Trips to feed store, vet, market — enter miles and it calculates</td></tr>
+  <tr><td>🪵 Materials</td><td>Lumber, fencing, hardware, building supplies</td></tr>
+  <tr><td>💉 Veterinary</td><td>Vet visits, medications, vaccines</td></tr>
+  <tr><td>⚙️ Equipment</td><td>Tools, incubators, brooders, larger purchases</td></tr>
+  <tr><td>💡 Utilities</td><td>Electric for brooder lights, water for animals</td></tr>
+  <tr><td>📦 Other</td><td>Anything else</td></tr>
+</table>
+
+<div class="tip">
+💡 <strong>Tip:</strong> You can add any custom categories in Settings → Manage Expense Categories. For example: "Show Fees", "Breeding Fees", "Packaging", etc.
+</div>
+
+<h2>Sale Items (Built-in)</h2>
+<table>
+  <tr><th>Item</th><th>Default Unit</th></tr>
+  <tr><td>Eggs</td><td>dozen</td></tr>
+  <tr><td>Hatching Eggs</td><td>dozen</td></tr>
+  <tr><td>Goats</td><td>head</td></tr>
+  <tr><td>Rabbits</td><td>each</td></tr>
+  <tr><td>Chickens</td><td>each</td></tr>
+  <tr><td>Turkeys</td><td>each</td></tr>
+  <tr><td>Ducks</td><td>each</td></tr>
+  <tr><td>Geese</td><td>each</td></tr>
+  <tr><td>Processed Meat</td><td>lb</td></tr>
+</table>
+
+<div class="tip">
+💡 <strong>Tip:</strong> Add custom items in Settings → Manage Sale Items. Examples: "Rabbit Kits", "Milk (gallon)", "Cheese", "Soap", "Chicks", etc.
+</div>
+
+<h2>Troubleshooting</h2>
+
+<table>
+  <tr><th>Problem</th><th>Solution</th></tr>
+  <tr><td>Camera doesn't work</td><td>In Chrome, go to Settings → Site Settings → Camera → find your app URL → Allow</td></tr>
+  <tr><td>Receipt scan fails</td><td>Make sure the receipt is well-lit and in focus. You can also edit items manually after scanning.</td></tr>
+  <tr><td>Data disappeared</td><td>Data is stored locally in Chrome. Don't clear Chrome's browsing data/cache. Google Sheets sync is your backup!</td></tr>
+  <tr><td>Google Sync fails</td><td>Make sure you deployed the Apps Script as "Anyone" can access. Re-deploy if needed.</td></tr>
+  <tr><td>App is slow</td><td>Close other apps on your phone. The receipt scanner requires internet for AI analysis.</td></tr>
+</table>
+
+<h2>Your Data is Safe</h2>
+<ul>
+  <li>All data saves automatically to your phone (even offline)</li>
+  <li>Google Sheets sync creates a backup in your Google account</li>
+  <li>Use "Export CSV" anytime for a local backup you can open in Excel</li>
+  <li>Receipt images stay on your device; they are sent to AI for analysis but not stored</li>
+</ul>
+
+<div class="alert alert-green">
+<strong>📞 Need help?</strong> The app was built specifically for Denton South Farm. All your data belongs to you and stays in your Google account.
+</div>
+
+<p style="text-align:center;color:#7a7a60;font-size:13px;margin-top:32px">🌾 Denton South Farm Manager · Built with care</p>
+
+</body>
+</html>
