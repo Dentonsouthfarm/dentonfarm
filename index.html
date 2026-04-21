@@ -2311,89 +2311,38 @@ function deleteSaleItem(id) {
 //  Both devices read from & write to it directly.
 // ══════════════════════════════════════════════
 
-let CLOUD_URL = '';
-let cloudOnline = false;
-let syncPending = false;
-
 function getCloudUrl() {
   return DB.settings.scriptUrl || '';
 }
 
-// ── Ping to check connection ──
-async function pingCloud() {
-  const url = getCloudUrl();
-  if (!url) return false;
-  try {
-    const res = await fetch(url + '?action=ping', { method: 'GET' });
-    const data = await res.json();
-    cloudOnline = data.success === true;
-    return cloudOnline;
-  } catch(e) {
-    cloudOnline = false;
-    return false;
-  }
-}
-
-// ── Pull ALL data from cloud → MERGE with local (never discard local records) ──
+// ── Pull: READ ONLY — never writes anything to the sheet ──
 async function pullFromCloud() {
   const url = getCloudUrl();
   if (!url) { showToast('Connect Google Sheets in Settings first'); return false; }
-
   setSyncStatus('pulling');
   try {
-    const res = await fetch(url + '?action=read', { method: 'GET' });
+    const res  = await fetch(url + '?action=read');
     const data = await res.json();
-    if (!data.success) throw new Error(data.error || 'Pull failed');
+    if (!data.success) throw new Error(data.error || 'Read failed');
 
-    // ── Merge expenses: cloud is truth, but keep any local IDs not in cloud ──
-    const cloudExpenses = (data.expenses || []).filter(e => e && e.id);
-    const cloudExpIds   = new Set(cloudExpenses.map(e => String(e.id)));
-    // Local records NOT yet in cloud (entered offline) — push these up after
-    const localOnlyExp  = DB.expenses.filter(e => e && e.id && !cloudExpIds.has(String(e.id)));
-    DB.expenses = [...cloudExpenses, ...localOnlyExp];
+    // Replace local cache with exactly what the sheet says — no merging, no pushing
+    DB.expenses = (data.expenses || []).filter(e => e && e.id);
+    DB.sales    = (data.sales    || []).filter(s => s && s.id);
+    DB.vendors  = (data.vendors  || []).filter(v => v && v.id);
 
-    // ── Merge sales ──
-    const cloudSales   = (data.sales || []).filter(s => s && s.id);
-    const cloudSaleIds = new Set(cloudSales.map(s => String(s.id)));
-    const localOnlySales = DB.sales.filter(s => s && s.id && !cloudSaleIds.has(String(s.id)));
-    DB.sales = [...cloudSales, ...localOnlySales];
-
-    // ── Merge vendors ──
-    const cloudVendors   = (data.vendors || []).filter(v => v && v.id);
-    const cloudVendorIds = new Set(cloudVendors.map(v => String(v.id)));
-    const localOnlyVendors = DB.vendors.filter(v => v && v.id && !cloudVendorIds.has(String(v.id)));
-    DB.vendors = [...cloudVendors, ...localOnlyVendors];
-
-    // ── Merge settings (keep local scriptUrl, update mileageRate from cloud) ──
-    if (data.settings && data.settings.mileageRate) {
-      DB.settings.mileageRate = parseFloat(data.settings.mileageRate) || 0.67;
-    }
-    if (data.settings && data.settings.expenseCategories) {
-      try { DB.expenseCategories = JSON.parse(data.settings.expenseCategories); } catch(e){}
-    }
-    if (data.settings && data.settings.saleItems) {
-      try { DB.saleItems = JSON.parse(data.settings.saleItems); } catch(e){}
-    }
+    const cs = data.settings || {};
+    if (cs.mileageRate)       DB.settings.mileageRate = parseFloat(cs.mileageRate) || 0.67;
+    if (cs.expenseCategories) { try { DB.expenseCategories = JSON.parse(cs.expenseCategories); } catch(e){} }
+    if (cs.saleItems)         { try { DB.saleItems = JSON.parse(cs.saleItems); } catch(e){} }
 
     saveDBLocal();
-    setSyncStatus('synced');
     refreshAllScreens();
-
-    // If we had local-only records, push them up to cloud now
-    if (localOnlyExp.length || localOnlySales.length || localOnlyVendors.length) {
-      showToast('Syncing ' + (localOnlyExp.length + localOnlySales.length) + ' offline records…');
-      for (const exp of localOnlyExp)     { await cloudSaveExpense(exp); }
-      for (const sale of localOnlySales)  { await cloudSaveSale(sale); }
-      for (const v of localOnlyVendors)   { await cloudSaveVendor(v); }
-      showToast('✓ All devices in sync');
-    } else {
-      showToast('✓ Up to date');
-    }
-
+    setSyncStatus('synced');
+    showToast('Up to date');
     return true;
   } catch(err) {
     setSyncStatus('error');
-    showToast('Pull failed — ' + err.message);
+    showToast('Could not reach cloud: ' + err.message);
     return false;
   }
 }
@@ -2455,39 +2404,11 @@ async function cloudSaveVendor(vendor) {
   } catch(e) {}
 }
 
-// ── Data row converters ──
-function rowToExpense(r) {
-  if (!r['Record ID']) return null;
-  return {
-    id: r['Record ID'],
-    date: r['Date'] || '',
-    category: catIdFromLabel(r['Category']),
-    description: r['Description'] || '',
-    vendor: r['Vendor'] || '',
-    mileage: r['Miles'] ? parseFloat(r['Miles']) : null,
-    mileageRate: r['Rate ($/mi)'] ? parseFloat(r['Rate ($/mi)']) : null,
-    amount: parseFloat(r['Amount']) || 0,
-    receiptUrl: r['Receipt URL'] || '',
-    notes: r['Notes'] || '',
-    source: r['Source'] || 'manual'
-  };
-}
-
-function rowToVendor(r) {
-  if (!r['ID']) return null;
-  return {
-    id: r['ID'], type: r['Type']||'seller', name: r['Name']||'',
-    phone: r['Phone']||'', email: r['Email']||'', address: r['Address']||'',
-    website: r['Website']||'', products: r['Products']||'',
-    notes: r['Notes']||'', createdAt: r['Created At']||''
-  };
-}
-
 function catIdFromLabel(label) {
   const map = { 'Feed':'feed','Supplies':'supplies','Mileage':'mileage',
     'Materials':'materials','Veterinary':'vet','Equipment':'equipment',
     'Utilities':'utilities','Other':'other' };
-  return map[label] || (label||'').toLowerCase() || 'other';
+  return map[label] || (label||'').toLowerCase().replace(/\s+/g,'_') || 'other';
 }
 
 // ── Status indicators ──
