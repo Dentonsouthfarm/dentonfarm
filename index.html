@@ -1495,7 +1495,7 @@ function saveManualExpense() {
   if (!desc && amount_raw > 0) { showToast('Add a description'); return; }
 
   const exp = {
-    id: Date.now(),
+    id: 'r' + Date.now(),
     date: document.getElementById('expDate').value || todayStr(),
     category: selectedExpCategory,
     description: desc,
@@ -1679,7 +1679,7 @@ async function saveReceiptExpenses() {
   pendingLineItems.forEach(item => {
     if (!item.name && item.amount <= 0) return;
     const exp = {
-      id: Date.now() + Math.random(),
+      id: 'e' + Date.now() + Math.floor(Math.random()*1000),
       date,
       category: item.category || 'other',
       description: item.name || 'Receipt item',
@@ -1768,7 +1768,7 @@ function saveSale() {
   });
 
   const sale = {
-    id: Date.now(),
+    id: 'r' + Date.now(),
     date: document.getElementById('saleDate').value || todayStr(),
     buyer: document.getElementById('saleBuyer').value.trim(),
     items,
@@ -2500,7 +2500,7 @@ function saveQuickMileage() {
   const rate = getMileageRate();
   const amount = parseFloat((miles * rate).toFixed(2));
   const exp = {
-    id: Date.now(),
+    id: 'r' + Date.now(),
     date,
     category: 'mileage',
     description: desc || `${miles} miles driven`,
